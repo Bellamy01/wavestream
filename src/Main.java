@@ -10,7 +10,7 @@ public class Main {
         if(!ds.open()){
             System.out.println("Couldn't open the database...");
         }
-        List<Artist> artists = ds.queryArtists();
+        List<Artist> artists = ds.queryArtists(DataSource.NO_ORDER);
         if(artists == null){
             System.out.println("Artists not found!");
         }

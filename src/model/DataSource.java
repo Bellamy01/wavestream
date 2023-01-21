@@ -33,8 +33,12 @@ public class DataSource {
     public static final String COLUMN_ALBUM_ID = "_id";
     public static final String COLUMN_ALBUM_NAME = "name";
 
-    public static final int INDEX_ALBUMS_ID = 1;
-    public static final int INDEX_ALBUMS_NAME = 2;
+    public static final int INDEX_ALBUM_ID = 1;
+    public static final int INDEX_ALBUM_NAME = 2;
+
+    public static final int NO_ORDER = 0;
+    public static final int ASC_ORDER = 1;
+    public static final int DESC_ORDER = 2;
 
     public boolean open(){
         try {
@@ -57,19 +61,31 @@ public class DataSource {
         }
     }
     
-    public List<Artist> queryArtists() {
+    public List<Artist> queryArtists(int orderOfSort) {
+        StringBuilder queryString = new StringBuilder("SELECT * FROM ");
+        queryString.append(TABLE_ARTISTS);
+
+        if(orderOfSort != NO_ORDER){
+            queryString.append(" ORDER BY ");
+            queryString.append(COLUMN_ARTIST_NAME);
+            queryString.append(" COLLATE NOCASE ");
+
+            if(orderOfSort == ASC_ORDER){
+                queryString.append("ASC");
+            }else {
+                queryString.append("DESC");
+            }
+        }
+
         try (Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery("SELECT * FROM "+TABLE_ARTISTS)){
+            ResultSet rs = statement.executeQuery(queryString.toString())){
 
             List<Artist> artists = new ArrayList<>();
             while(rs.next()) {
                 Artist artist = new Artist();
 
-                int id= rs.getInt(COLUMN_ARTIST_ID);
-                String name = rs.getString(COLUMN_ARTIST_NAME);
-
-                artist.setId(id);
-                artist.setName(name);
+                artist.setId(rs.getInt(INDEX_ARTIST_ID));
+                artist.setName(rs.getString(INDEX_ALBUM_NAME));
 
                 artists.add(artist);
             }
