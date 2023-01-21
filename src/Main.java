@@ -1,3 +1,4 @@
+import model.Album;
 import model.Artist;
 import model.DataSource;
 
@@ -10,6 +11,8 @@ public class Main {
         if(!ds.open()){
             System.out.println("Couldn't open the database...");
         }
+
+        //artists
         List<Artist> artists = ds.queryArtists(DataSource.NO_ORDER);
         if(artists == null){
             System.out.println("Artists not found!");
@@ -17,6 +20,17 @@ public class Main {
         System.out.println("===========ARTIST DETAILS=============");
         for(Artist artist : artists){
             System.out.println(artist.getId()+ " ----- "+artist.getName());
+        }
+
+        //albums
+        String artistName = "Burna Boy";
+        List<Album> albums = ds.queryTheAlbumForArtist(artistName,DataSource.DESC_ORDER);
+        if(albums == null){
+            System.out.println(artistName+ " 's albums were no found");
+        }
+        System.out.println("===========ALBUM DETAILS===============");
+        for(Album album : albums){
+            System.out.println(album.getId()+ " ----- " + album.getName());
         }
         ds.close();
     }
