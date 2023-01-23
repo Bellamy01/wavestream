@@ -42,6 +42,18 @@ public class DataSource {
     public static final int ASC_ORDER = 1;
     public static final int DESC_ORDER = 2;
 
+    public static final String QUERY_ARTIST_START_STRING = "SELECT * FROM "+ TABLE_ARTISTS;
+    public static final String QUERY_ARTIST_SORT_STRING = " ORDER BY "+ TABLE_ARTISTS+ '.'+COLUMN_ARTIST_NAME+ " COLLATE NOCASE";
+
+    public static final String QUERY_ALBUM_FOR_THE_ARTIST_START_STRING =
+            "SELECT * FROM "+TABLE_ALBUMS + " INNER JOIN "+ TABLE_ARTISTS +
+                    " ON "+ TABLE_ALBUMS + "." + COLUMN_ALBUM_ARTIST_ID + "=" +
+                    TABLE_ARTISTS + "." + COLUMN_ARTIST_ID + " WHERE " + TABLE_ARTISTS +
+                    "." + COLUMN_ARTIST_NAME + "=\"";
+
+    public static final String QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING =
+            " ORDER BY "+TABLE_ALBUMS+"."+COLUMN_ARTIST_NAME+" COLLATE NOCASE ";
+
     public boolean open(){
         try {
             connection = DriverManager.getConnection(DB_CONNECTION_STRING);
@@ -62,13 +74,18 @@ public class DataSource {
             System.out.println("Unable to close connection..."+e.getMessage());
         }
     }
-    
+
     public List<Artist> queryArtists(int orderOfSort) {
-        StringBuilder queryString = new StringBuilder("SELECT * FROM ");
-        queryString.append(TABLE_ARTISTS);
+        StringBuilder queryString = new StringBuilder(QUERY_ARTIST_START_STRING);
 
-        sorting(orderOfSort, queryString);
-
+        if(orderOfSort != NO_ORDER){
+            queryString.append(QUERY_ARTIST_SORT_STRING);
+            if(orderOfSort == ASC_ORDER){
+                queryString.append("ASC");
+            }else {
+                queryString.append("DESC");
+            }
+        }
         try (Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(queryString.toString())){
 
@@ -89,17 +106,11 @@ public class DataSource {
     }
 
     public List<Album> queryTheAlbumForArtist(String artistName,int orderOfSort){
-        StringBuilder queryString = new StringBuilder("SELECT * FROM ");
-        queryString.append(TABLE_ALBUMS + " INNER JOIN "+ TABLE_ARTISTS +
-                " ON "+ TABLE_ALBUMS + "." + COLUMN_ALBUM_ARTIST_ID + "=" +
-                TABLE_ARTISTS + "." + COLUMN_ARTIST_ID + " WHERE " + TABLE_ARTISTS +
-                "." + COLUMN_ARTIST_NAME + "=\"" + artistName + "\"");
+        StringBuilder queryString = new StringBuilder(QUERY_ALBUM_FOR_THE_ARTIST_START_STRING);
+        queryString.append(artistName+"\"");
 
         if(orderOfSort != NO_ORDER){
-            queryString.append(" ORDER BY ");
-            queryString.append(TABLE_ALBUMS+".");
-            queryString.append(COLUMN_ARTIST_NAME);
-            queryString.append(" COLLATE NOCASE ");
+            queryString.append(QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING);
 
             if(orderOfSort == ASC_ORDER){
                 queryString.append("ASC");
@@ -107,7 +118,7 @@ public class DataSource {
                 queryString.append("DESC");
             }
         }
-        //System.out.println(queryString);
+        System.out.println("\n\n"+queryString);
 
         try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString.toString())){
 
@@ -127,20 +138,6 @@ public class DataSource {
         } catch (SQLException e){
             System.out.println("Failed to query: "+e.getMessage());
             return null;
-        }
-    }
-
-    private void sorting(int orderOfSort, StringBuilder queryString) {
-        if(orderOfSort != NO_ORDER){
-            queryString.append(" ORDER BY ");
-            queryString.append(COLUMN_ARTIST_NAME);
-            queryString.append(" COLLATE NOCASE ");
-
-            if(orderOfSort == ASC_ORDER){
-                queryString.append("ASC");
-            }else {
-                queryString.append("DESC");
-            }
         }
     }
 }
