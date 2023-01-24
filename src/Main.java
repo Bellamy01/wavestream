@@ -1,5 +1,6 @@
 import model.Album;
 import model.Artist;
+import model.ArtistSong;
 import model.DataSource;
 
 import java.util.List;
@@ -38,6 +39,21 @@ public class Main {
                 System.out.println("\n===========ALBUM DETAILS===============");
                 for (Album album : albums) {
                     System.out.println(album.getName());
+                }
+            }
+        }
+        //songs
+        String songName = "24K Magic";
+        List<ArtistSong> artistSongs = ds.queryTheArtistSong(songName,DataSource.NO_ORDER);
+        if(albums == null){
+            System.out.println("No artist for specified song, query failed");
+        }else {
+            if(albums.size() == 0){
+                System.out.println("No "+songName+"'s songs were found");
+            }else {
+                System.out.println("\n===========SONG DETAILS===============");
+                for (ArtistSong artistSong : artistSongs) {
+                    System.out.println(artistSong.getArtistName()+ " ----- "+ artistSong.getAlbumName()+ " ---- "+ artistSong.getTrack());
                 }
             }
         }
