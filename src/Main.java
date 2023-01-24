@@ -12,7 +12,6 @@ public class Main {
         if(!ds.open()){
             System.out.println("Couldn't open the database...");
         }
-
         //artists
         List<Artist> artists = ds.queryArtists(DataSource.NO_ORDER);
         if(artists == null){
@@ -56,6 +55,15 @@ public class Main {
                     System.out.println(artistSong.getArtistName()+ " ----- "+ artistSong.getAlbumName()+ " ---- "+ artistSong.getTrack());
                 }
             }
+        }
+        //Result set meta-data
+        System.out.println("\n\n=============META DATA===============");
+        ds.queryTheSongMetaData();
+        int count = ds.getCount(DataSource.TABLE_SONGS);
+        System.out.println("You have "+ count + " records in songs");
+
+        if(ds.createTheViewForSongArtist()){
+            System.out.println("Cool, you've just created the view");
         }
         ds.close();
     }

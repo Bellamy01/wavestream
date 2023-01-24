@@ -63,6 +63,13 @@ public class DataSource {
     public static final String QUERY_ARTIST_SONG_SORT_STRING =
             "ORDER BY" + TABLE_ARTISTS+ "."+ COLUMN_ARTIST_NAME+ "COLLATE NOCASE ";
 
+    public static final String TABLE_ARTISTS_SONG_VIEW = "artist_list";
+    public static final String CREATE_ARTIST_FOR_SONG_VIEW =
+            "CREATE VIEW IF NOT EXISTS "+TABLE_ARTISTS_SONG_VIEW+ " AS SELECT "+ TABLE_ARTISTS + "."+ COLUMN_ARTIST_NAME + ", "+ TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME + " AS ALBUM, "+ TABLE_SONGS + "."+ COLUMN_SONG_TITLE+ " FROM "+ TABLE_SONGS + " INNER JOIN "+
+            TABLE_ALBUMS + " ON "+ TABLE_SONGS+ "."+ COLUMN_SONG_ALBUM + " = "+ TABLE_ALBUMS +"."+COLUMN_ALBUM_ID +" INNER JOIN "+
+                    TABLE_ARTISTS + " ON "+ TABLE_ARTISTS +"."+ COLUMN_ARTIST_ID + " = "+ TABLE_ALBUMS+ "."+ COLUMN_ALBUM_ARTIST_ID + " ORDER BY "+
+                    TABLE_ARTISTS+ "."+ COLUMN_ARTIST_NAME + ", "+ TABLE_ALBUMS + "."+ COLUMN_ALBUM_NAME + ", "+ TABLE_SONGS+ "."+ COLUMN_SONG_TRACK;
+
     public boolean open(){
         try {
             connection = DriverManager.getConnection(DB_CONNECTION_STRING);
@@ -160,6 +167,16 @@ public class DataSource {
         }
     }
 
+    public boolean createTheViewForSongArtist(){
+       try(Statement statement = connection.createStatement();){
+           statement.execute(CREATE_ARTIST_FOR_SONG_VIEW);
+           return true;
+       } catch (SQLException e){
+           System.out.println("Failed to query: "+ e.getMessage());
+           return false;
+       }
+    }
+
     private StringBuilder complexQuery(String songName, int orderOfSort, String queryArtistSongStartString, String queryArtistSongSortString) {
         StringBuilder queryString = new StringBuilder(queryArtistSongStartString);
         queryString.append(songName+"\"");
@@ -174,5 +191,29 @@ public class DataSource {
         }
         System.out.println(queryString);
         return queryString;
+    }
+
+    public void queryTheSongMetaData(){
+        String queryString = "SELECT * FROM "+ TABLE_SONGS;
+        try (Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString.toString())){
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int numOfColumns = rsmd.getColumnCount();
+            System.out.println("The number of columns for table songs: "+ numOfColumns);
+            for(int i = 1; i<=numOfColumns; i++){
+                System.out.println("The column "+ i+ " in table songs has the name: "+ rsmd.getColumnName(i));
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to query: "+ e.getMessage());
+        }
+    }
+
+    public int getCount(String tableName){
+        String queryString = "SELECT COUNT(*) FROM "+ tableName;
+        try (Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString.toString())){
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            System.out.println("Failed to query: "+ e.getMessage());
+            return -1;
+        }
     }
 }
