@@ -4,6 +4,7 @@ import model.ArtistSong;
 import model.DataSource;
 
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,7 +28,10 @@ public class Main {
             }
         }
         //albums
-        String artistName = "Maroon 5";
+        System.out.print("Please insert artist: ");
+        Scanner scanner = new Scanner(System.in);
+        String artistName = scanner.nextLine();
+
         List<Album> albums = ds.queryTheAlbumForArtist(artistName,DataSource.DESC_ORDER);
         if(albums == null){
             System.out.println("No albums, query failed");
@@ -41,28 +45,13 @@ public class Main {
                 }
             }
         }
-        //songs
-        String songName = "24K Magic";
-        List<ArtistSong> artistSongs = ds.queryTheArtistSong(songName,DataSource.NO_ORDER);
-        if(artistSongs == null){
-            System.out.println("No artist for specified song, query failed");
-        }else {
-            if(artistSongs.size() == 0){
-                System.out.println("No "+songName+"'s songs were found");
-            }else {
-                System.out.println("\n===========SONG DETAILS===============");
-                for (ArtistSong artistSong : artistSongs) {
-                    System.out.println(artistSong.getArtistName()+ " ----- "+ artistSong.getAlbumName()+ " ---- "+ artistSong.getTrack());
-                }
-            }
-        }
-
         //View song info
         if(ds.createTheViewForSongArtist()){
-            System.out.println("Cool, you've just created the view");
+            System.out.println("\n\nCool, you've just created the view");
         }
 
-        String songTitle = "7 rings";
+        System.out.print("\n\nPlease insert song title: ");
+        String songTitle = scanner.nextLine();
         List<ArtistSong> artistSongs1 = ds.querySongInfoView(songTitle);
         if(artistSongs1.isEmpty()){
             System.out.println("Empty, could not find results for that title!!");

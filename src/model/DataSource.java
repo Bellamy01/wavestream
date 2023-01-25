@@ -6,6 +6,7 @@ import java.util.List;
 
 public class DataSource {
     private Connection connection;
+    private PreparedStatement queryViewSongTitleInfoView;
     public static final String DB_NAME = "sound.db";
     public static final String DB_CONNECTION_STRING = "jdbc:sqlite:"+System.getProperty("user.dir")+"\\"+DB_NAME;
 
@@ -73,10 +74,13 @@ public class DataSource {
     public static final String QUERY_VIEW_SONG_TITLE_INFO = "SELECT "+ COLUMN_ARTIST_NAME + ","+ COLUMN_SONG_ALBUM + "," + COLUMN_SONG_TRACK + " FROM "+
             TABLE_ARTISTS_SONG_VIEW + " WHERE " + COLUMN_SONG_TITLE + "= \"";
 
+    public static final String QUERY_VIEW_SONG_TITLE_INFO_PREPARED_STMT = "SELECT "+ COLUMN_ARTIST_NAME + ","+ COLUMN_SONG_ALBUM + "," + COLUMN_SONG_TRACK + " FROM "+
+            TABLE_ARTISTS_SONG_VIEW + " WHERE " + COLUMN_SONG_TITLE + "= ?";
+
     public boolean open(){
         try {
             connection = DriverManager.getConnection(DB_CONNECTION_STRING);
-            System.out.println("Connection to the the database successful...");
+            queryViewSongTitleInfoView = connection.prepareStatement(QUERY_VIEW_SONG_TITLE_INFO_PREPARED_STMT);
             return true;
         } catch (SQLException e){
             System.out.println("Connection to database failed..."+e.getMessage());
@@ -125,9 +129,9 @@ public class DataSource {
     }
 
     public List<Album> queryTheAlbumForArtist(String artistName,int orderOfSort){
-        String queryString = complexQuery(artistName, orderOfSort, QUERY_ALBUM_FOR_THE_ARTIST_START_STRING, QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING);
+        String queryString = complexQueryString(artistName, orderOfSort, QUERY_ALBUM_FOR_THE_ARTIST_START_STRING, QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING);
 
-        try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString.toString())){
+        try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString)){
 
             List<Album> albums = new ArrayList<>();
 
@@ -148,7 +152,7 @@ public class DataSource {
     }
 
     public List<ArtistSong> queryTheArtistSong(String songName, int orderOfSort){
-        String queryString = complexQuery(songName, orderOfSort, QUERY_ARTIST_SONG_START_STRING, QUERY_ARTIST_SONG_SORT_STRING);
+        String queryString = complexQueryString(songName, orderOfSort, QUERY_ARTIST_SONG_START_STRING, QUERY_ARTIST_SONG_SORT_STRING);
         return loopSongArtistResults(queryString);
     }
 
@@ -163,31 +167,41 @@ public class DataSource {
     }
 
     public List<ArtistSong> querySongInfoView(String songTitle) {
-        String queryString = QUERY_VIEW_SONG_TITLE_INFO + songTitle + "\"";
-        return loopSongArtistResults(queryString);
-    }
-
-    private List<ArtistSong> loopSongArtistResults(String queryString){
-        try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString)){
-            List<ArtistSong> artistSongs = new ArrayList<>();
-
-            while(rs.next()){
-                ArtistSong artistSong = new ArtistSong();
-
-                artistSong.setArtistName(rs.getString(1));
-                artistSong.setAlbumName(rs.getString(2));
-                artistSong.setTrack(rs.getInt(3));
-
-                artistSongs.add(artistSong);
-            }
-            return artistSongs;
+        try{
+            queryViewSongTitleInfoView.setString(1,songTitle);
+            ResultSet rs = queryViewSongTitleInfoView.executeQuery();
+            return getArtistSongs(rs);
         } catch (SQLException e){
             System.out.println("Failed to query: "+ e.getMessage());
             return null;
         }
     }
 
-    private String complexQuery(String songName, int orderOfSort, String queryArtistSongStartString, String queryArtistSongSortString) {
+    private List<ArtistSong> loopSongArtistResults(String queryString){
+        try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString)){
+            return getArtistSongs(rs);
+        } catch (SQLException e){
+            System.out.println("Failed to query: "+ e.getMessage());
+            return null;
+        }
+    }
+
+    private List<ArtistSong> getArtistSongs(ResultSet rs) throws SQLException {
+        List<ArtistSong> artistSongs = new ArrayList<>();
+
+        while(rs.next()){
+            ArtistSong artistSong = new ArtistSong();
+
+            artistSong.setArtistName(rs.getString(1));
+            artistSong.setAlbumName(rs.getString(2));
+            artistSong.setTrack(rs.getInt(3));
+
+            artistSongs.add(artistSong);
+        }
+        return artistSongs;
+    }
+
+    private String complexQueryString(String songName, int orderOfSort, String queryArtistSongStartString, String queryArtistSongSortString) {
         StringBuilder queryString = new StringBuilder(queryArtistSongStartString);
         queryString.append(songName);
         queryString.append("\"");
@@ -200,7 +214,7 @@ public class DataSource {
                 queryString.append("DESC");
             }
         }
-        System.out.println(queryString);
+        //System.out.println(queryString);
         return queryString.toString();
     }
 
