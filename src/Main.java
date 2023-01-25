@@ -44,10 +44,10 @@ public class Main {
         //songs
         String songName = "24K Magic";
         List<ArtistSong> artistSongs = ds.queryTheArtistSong(songName,DataSource.NO_ORDER);
-        if(albums == null){
+        if(artistSongs == null){
             System.out.println("No artist for specified song, query failed");
         }else {
-            if(albums.size() == 0){
+            if(artistSongs.size() == 0){
                 System.out.println("No "+songName+"'s songs were found");
             }else {
                 System.out.println("\n===========SONG DETAILS===============");
@@ -56,15 +56,28 @@ public class Main {
                 }
             }
         }
+
+        //View song info
+        if(ds.createTheViewForSongArtist()){
+            System.out.println("Cool, you've just created the view");
+        }
+
+        String songTitle = "7 rings";
+        List<ArtistSong> artistSongs1 = ds.querySongInfoView(songTitle);
+        if(artistSongs1.isEmpty()){
+            System.out.println("Empty, could not find results for that title!!");
+            return;
+        }
+        System.out.println("\n===========SONG INFO FROM VIEW===============");
+            for (ArtistSong artistSong : artistSongs1) {
+                System.out.println(artistSong.getArtistName()+ " ----- "+ artistSong.getAlbumName()+ " ---- "+ artistSong.getTrack());
+            }
         //Result set meta-data
         System.out.println("\n\n=============META DATA===============");
         ds.queryTheSongMetaData();
         int count = ds.getCount(DataSource.TABLE_SONGS);
-        System.out.println("You have "+ count + " records in songs");
+        System.out.println("\nYou have "+ count + " records in songs");
 
-        if(ds.createTheViewForSongArtist()){
-            System.out.println("Cool, you've just created the view");
-        }
         ds.close();
     }
 }

@@ -3,6 +3,7 @@ package model;
 public class ArtistSong {
     private String artistName;
     private String albumName;
+
     private int track;
 
     public String getArtistName() {
