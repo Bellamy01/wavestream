@@ -90,8 +90,8 @@ public class DataSource {
 
     public void close(){
         try {
-            if (connection != null) {
-                connection.close();
+            if (queryViewSongTitleInfoView != null) {
+                queryViewSongTitleInfoView.close();
             }
         } catch(SQLException e){
             System.out.println("Unable to close connection..."+e.getMessage());
