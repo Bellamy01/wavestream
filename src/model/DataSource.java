@@ -173,7 +173,7 @@ public class DataSource {
     }
 
     public List<Album> queryTheAlbumForArtist(String artistName,int orderOfSort){
-        String queryString = complexQueryString(artistName, orderOfSort, QUERY_ALBUM_FOR_THE_ARTIST_START_STRING, QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING);
+        String queryString = appendOrderString(artistName, orderOfSort, QUERY_ALBUM_FOR_THE_ARTIST_START_STRING, QUERY_THE_ALBUM_FOR_THE_ARTIST_SORT_STRING);
 
         try(Statement statement = connection.createStatement();ResultSet rs = statement.executeQuery(queryString)){
 
@@ -196,7 +196,7 @@ public class DataSource {
     }
 
     public List<ArtistSong> queryTheArtistSong(String songName, int orderOfSort){
-        String queryString = complexQueryString(songName, orderOfSort, QUERY_ARTIST_SONG_START_STRING, QUERY_ARTIST_SONG_SORT_STRING);
+        String queryString = appendOrderString(songName, orderOfSort, QUERY_ARTIST_SONG_START_STRING, QUERY_ARTIST_SONG_SORT_STRING);
         return loopSongArtistResults(queryString);
     }
 
@@ -245,7 +245,7 @@ public class DataSource {
         return artistSongs;
     }
 
-    private String complexQueryString(String songName, int orderOfSort, String queryArtistSongStartString, String queryArtistSongSortString) {
+    private String appendOrderString(String songName, int orderOfSort, String queryArtistSongStartString, String queryArtistSongSortString) {
         StringBuilder queryString = new StringBuilder(queryArtistSongStartString);
         queryString.append(songName);
         queryString.append("\"");
@@ -260,6 +260,87 @@ public class DataSource {
         }
         //System.out.println(queryString);
         return queryString.toString();
+    }
+
+    private int insertArtists(String name) throws SQLException {
+        queryArtist.setString(1,name);
+        ResultSet rs = queryArtist.executeQuery();
+        if (rs.next()) {
+            return rs.getInt(1);
+        } else {
+            insertIntoArtists.setString(1,name);
+            int nOfAffectedRows = insertIntoArtists.executeUpdate();
+
+            if( nOfAffectedRows != 1){
+                throw new SQLException("Couldn't insert the artist!!");
+            }
+            ResultSet generatedKeys = insertIntoArtists.getGeneratedKeys();
+
+            if (generatedKeys.next()){
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Couldn't get id for artist '"+ name + "'");
+            }
+        }
+    }
+
+    private int insertAlbum(String albumName, int artistId) throws SQLException {
+        queryAlbum.setString(1,albumName);
+        queryAlbum.setInt(2,artistId);
+
+        ResultSet rs = queryAlbum.executeQuery();
+
+        if(rs.next()) {
+            return  rs.getInt(1);
+        } else {
+            insertIntoAlbums.setString(1,albumName);
+            insertIntoAlbums.setInt(2,artistId);
+            int nOfAffectedRows = insertIntoAlbums.executeUpdate();
+
+            if( nOfAffectedRows != 1){
+
+                throw new SQLException("Couldn't insert the album!!");
+            }
+            ResultSet generatedKeys = insertIntoAlbums.getGeneratedKeys();
+
+            if (generatedKeys.next()){
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Couldn't get id for album '"+ albumName + "'");
+            }
+        }
+    }
+
+    public void insertSong(String songTitle, String artistName, String albumName, int trackNumber) {
+        try {
+            connection.setAutoCommit(false);
+            int artistId = insertArtists(artistName);
+            int albumId = insertAlbum(albumName, artistId);
+
+            insertIntoSongs.setInt(1,trackNumber);
+            insertIntoSongs.setString(2,songTitle);
+            insertIntoSongs.setInt(3,albumId);
+
+            int nOfAffectedRows = insertIntoAlbums.executeUpdate();
+            if(nOfAffectedRows == 1){
+                connection.commit();
+            }else {
+                throw new SQLException("Failed to insert the song '"+ songTitle + "'");
+            }
+        } catch (SQLException e){
+            System.out.println("Failed to insert song exception:" + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (SQLException f) {
+                System.out.println("Couldn't rollback "+ f.getMessage());
+            }
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException g) {
+                System.out.println("Couldn't set AutoCommit to true"+ g.getMessage());
+            }
+        }
     }
 
     public void queryTheSongMetaData(){

@@ -3,11 +3,12 @@ import model.Artist;
 import model.ArtistSong;
 import model.DataSource;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         DataSource ds = new DataSource();
         ds.open();
         if(!ds.open()){
@@ -66,6 +67,8 @@ public class Main {
         ds.queryTheSongMetaData();
         int count = ds.getCount(DataSource.TABLE_SONGS);
         System.out.println("\nYou have "+ count + " records in songs");
+
+        ds.insertSong("I love to Code", "Coder", "The Coder",1);
 
         ds.close();
     }
